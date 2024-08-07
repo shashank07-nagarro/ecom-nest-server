@@ -1,0 +1,98 @@
+# docker compose version
+version: '3.7'
+# all the containers have to declare inside services
+services:
+  # App service
+  demoapp:
+    # application rely on database running
+    depends_on:
+      - db
+    # this build context will take the commands from Dockerfile
+    build:
+      context: .
+      dockerfile: Dockerfile
+    # image name
+    image: nest-demo-docker
+    # container name
+    container_name: demoapp
+    # always restart the container if it stops.
+    restart: always
+    # docker run -t is allow
+    tty: true
+    # application port, this is take value from env file
+    ports:
+      - '${SERVER_PORT}:${SERVER_PORT}'
+    # working directory
+    working_dir: /var/www/nest-demo
+    # application environment
+    environment:
+      SERVICE_NAME: demoapp
+      SERVICE_TAGS: dev
+      SERVICE_DB_HOST: ${COLD_DB_HOST}:${COLD_DB_PORT}
+      SERVICE_DB_USER: ${COLD_DB_USERNAME}
+      SERVICE_DB_PASSWORD: ${COLD_DB_PASSWORD}
+      SERVICE_ES_HOST: ${ELASTIC_SEARCH_HOST}:${ELASTIC_SEARCH_PORT}
+      ELASTICSEARCH_URL: ${ELASTIC_SEARCH_URL}
+    # save (persist) data and also to share data between containers
+    volumes:
+      - ./:/var/www/nest-demo
+      - /var/www/nest-demo/node_modules
+    # application network, each container for a service joins this network
+    networks:
+      - nest-demo-network
+  # Database service
+  db:
+    # pull image from docker hub
+    image: mysql:latest
+    # container name
+    container_name: mysql
+    # always restart the container if it stops.
+    restart: always
+    # database credentials, this is take value from env file
+    environment:
+      COLD_DB_DATABASE: ${COLD_DB_DATABASE}
+      COLD_DB_USERNAME: ${COLD_DB_USERNAME}
+      COLD_DB_PASSWORD: ${COLD_DB_PASSWORD}
+    # save (persist) data and also to share data between containers
+    volumes:
+      - db_data:/data/db
+    # database port
+    ports:
+      - '${COLD_DB_PORT}:${COLD_DB_PORT}'
+    # application network, each container for a service joins this network
+    networks:
+      - nest-demo-network
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.9.0
+    container_name: elasticsearch
+    environment:
+      - node.name=elasticsearch
+      - http.port=9200
+      - http.host=0.0.0.0
+      - transport.host=127.0.0.1
+      - cluster.name=es-docker-cluster
+      - discovery.seed_hosts=elasticsearch
+      - cluster.initial_master_nodes=elasticsearch
+      - bootstrap.memory_lock=true
+      - 'ES_JAVA_OPTS=-Xms512m -Xmx512m'
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - es_data:/var/lib/elasticsearch
+    ports:
+      - '${ELASTIC_SEARCH_PORT}:${ELASTIC_SEARCH_PORT}'
+    networks:
+      - nest-demo-network
+
+#Docker Networks
+networks:
+  # All container connect in a network
+  nest-demo-network:
+    driver: bridge
+# save (persist) data
+volumes:
+  db_data: {}
+  es_data: {}
