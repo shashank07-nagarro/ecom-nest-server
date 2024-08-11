@@ -1,36 +1,26 @@
-FROM node:10-alpine
+# Base image
+FROM node:18
 
-# Install PM2
-RUN npm install -g pm2
-
-# Set working directory
-RUN mkdir -p /var/www/nest-demo
+# Create app directory
 WORKDIR /var/www/nest-demo
 
-# add `/usr/src/app/node_modules/.bin` to $PATH
-ENV PATH /var/www/nest-demo/node_modules/.bin:$PATH
-# create user with no password
-RUN adduser --disabled-password demo
+# A wildcard is used to ensure both package.json AND package-lock.json are copied
+COPY package*.json ./
 
-# Copy existing application directory contents
-COPY . /var/www/nest-demo
-# install and cache app dependencies
-COPY package.json /var/www/nest-demo/package.json
-COPY package-lock.json /var/www/nest-demo/package-lock.json
-
-# grant a permission to the application
-RUN chown -R demo:demo /var/www/nest-demo
-USER demo
-
-# clear application caching
-RUN npm cache clean --force
-# install all dependencies
+# Install app dependencies
 RUN npm install
 
-EXPOSE 3002
-# start run in production environment
-#CMD [ "npm", "run", "pm2:delete" ]
-#CMD [ "npm", "run", "build-docker:dev" ]
+# Bundle app source
+COPY . .
 
-# start run in development environment
-CMD [ "npm", "run", "start:dev" ]
+# Copy the .env and .env.development files
+COPY .env ./
+
+# Creates a "dist" folder with the production build
+RUN npm run build
+
+# Expose the port on which the app will run
+EXPOSE 3001
+
+# Start the server using the production build
+CMD ["npm", "run", "start"]

@@ -34,6 +34,14 @@ export class Product {
   @ApiProperty()
   price: number;
 
+  @Column()
+  @ApiProperty()
+  mrp: number;
+
+  @Column()
+  @ApiProperty()
+  color: string;
+
   @Column({
     type: 'enum',
     enum: ['Active', 'Inactive'],

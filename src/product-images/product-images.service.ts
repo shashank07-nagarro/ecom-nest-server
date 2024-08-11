@@ -19,8 +19,9 @@ export class ProductImagesService {
     private productImageRepository: Repository<ProductImage>,
     private readonly searchService: SearchService,
   ) {}
-  remove(id: number) {
-    return `This action removes a #${id} productImage`;
+  async remove(id: number) {
+    const user = await this.productImageRepository.findOneBy({ id });
+    return this.productImageRepository.remove(user);
   }
 
   async resizeAndUpload(

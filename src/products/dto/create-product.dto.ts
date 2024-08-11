@@ -26,6 +26,12 @@ export class CreateProductDto {
   @ApiProperty()
   price: number;
 
+  @ApiProperty()
+  mrp: number;
+
+  @ApiProperty()
+  color: string;
+
   @IsArray()
   @ArrayNotEmpty()
   @ArrayMinSize(1)

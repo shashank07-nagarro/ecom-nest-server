@@ -15,4 +15,13 @@ export class FilterProductMappingDto {
 
   @ApiProperty()
   gender?: string;
+
+  @ApiProperty()
+  minPrice?: number;
+
+  @ApiProperty()
+  maxPrice?: number;
+
+  @ApiProperty()
+  color?: string[];
 }

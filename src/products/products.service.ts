@@ -24,8 +24,16 @@ export class ProductsService {
     private readonly searchService: SearchService,
   ) {}
   async create(createProductDto: CreateProductDto): Promise<Product> {
-    const { title, alias, description, price, categoryIds, genderIds } =
-      createProductDto;
+    const {
+      title,
+      alias,
+      description,
+      price,
+      categoryIds,
+      genderIds,
+      mrp,
+      color,
+    } = createProductDto;
 
     // Fetch categories by IDs
     const categories = await this.categoryRepository.findByIds(categoryIds);
@@ -49,6 +57,8 @@ export class ProductsService {
     product.alias = alias;
     product.description = description;
     product.price = price;
+    product.mrp = mrp;
+    product.color = color;
     product.categories = categories;
     product.genders = genders;
 
@@ -88,7 +98,9 @@ export class ProductsService {
 
   async remove(id: number) {
     const user = await this.productRepository.findOneBy({ id });
-    return this.productRepository.remove(user);
+    const data = this.productRepository.remove(user);
+    await this.searchService.remove(id);
+    return data;
   }
 
   async findByFilters(filter: FilterProductMappingDto): Promise<Product[]> {
@@ -138,18 +150,24 @@ export class ProductsService {
   }
 
   async findByFiltersES(filter: FilterProductMappingDto) {
-    const { categoryId, genderId, baseCategoryId, category, gender } = {
+    const {
+      categoryId,
+      genderId,
+      baseCategoryId,
+      category,
+      gender,
+      minPrice,
+      maxPrice,
+      color = [],
+    } = {
       ...filter,
     };
-    let query: any = {
-      match_all: {},
+    let query: { bool: { must: any[]; filter?: {} } } = {
+      bool: {
+        must: [],
+      },
     };
-    if (category || gender) {
-      query = {
-        bool: {
-          must: [],
-        },
-      };
+    if (category || gender || minPrice || maxPrice || color.length) {
       if (category) {
         query.bool.must.push({
           term: {
@@ -161,6 +179,23 @@ export class ProductsService {
         query.bool.must.push({
           term: {
             'genders.alias.keyword': gender.toLowerCase(),
+          },
+        });
+      }
+      if (color.length) {
+        query.bool.filter = {
+          terms: {
+            color: color,
+          },
+        };
+      }
+      if (minPrice > -1 && maxPrice > -1) {
+        query.bool.must.push({
+          range: {
+            price: {
+              gte: minPrice,
+              lte: maxPrice,
+            },
           },
         });
       }

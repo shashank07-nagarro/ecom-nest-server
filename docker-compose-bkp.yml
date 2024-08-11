@@ -1,48 +1,70 @@
+# docker compose version
+version: '3.7'
+# all the containers have to declare inside services
 services:
+  # App service
   demoapp:
+    # application rely on database running
     depends_on:
       - db
       - elasticsearch
+    # this build context will take the commands from Dockerfile
     build:
       context: .
       dockerfile: Dockerfile
+    # image name
     image: nest-demo-docker
+    # container name
     container_name: demoapp
+    # always restart the container if it stops.
     restart: always
+    # docker run -t is allow
     tty: true
+    # application port, this is take value from env file
     ports:
       - '${SERVER_PORT}:${SERVER_PORT}'
+    # working directory
     working_dir: /var/www/nest-demo
+    # application environment
     environment:
       SERVICE_NAME: demoapp
       SERVICE_TAGS: dev
       SERVICE_DB_HOST: ${COLD_DB_HOST}:${COLD_DB_PORT}
       SERVICE_DB_USER: ${COLD_DB_USERNAME}
       SERVICE_DB_PASSWORD: ${COLD_DB_PASSWORD}
-      #SERVICE_ES_HOST: ${ELASTIC_SEARCH_HOST}:${ELASTIC_SEARCH_PORT}
+      SERVICE_ES_HOST: ${ELASTIC_SEARCH_HOST}:${ELASTIC_SEARCH_PORT}
       #ELASTICSEARCH_URL: ${ELASTIC_SEARCH_URL}
       ELASTICSEARCH_NODE: ${ELASTICSEARCH_NODE}
       ELASTICSEARCH_USERNAME: ${ELASTICSEARCH_USERNAME}
       ELASTICSEARCH_PASSWORD: ${ELASTICSEARCH_PASSWORD}
+    # save (persist) data and also to share data between containers
     volumes:
       - ./:/var/www/nest-demo
       - /var/www/nest-demo/node_modules
+    # application network, each container for a service joins this network
     networks:
       - nest-demo-network
-
+  # Database service
   db:
+    # pull image from docker hub
     image: mysql:latest
+    # container name
     container_name: mysql
+    # always restart the container if it stops.
     restart: always
+    # database credentials, this is take value from env file
     environment:
       MYSQL_DATABASE: ${COLD_DB_DATABASE}
       MYSQL_ROOT_USERNAME: ${COLD_DB_USERNAME}
       MYSQL_ROOT_PASSWORD: ${COLD_DB_PASSWORD}
+    # save (persist) data and also to share data between containers
     volumes:
       - mysql-volume:/var/lib/mysql:rw
       - ./mysql-db:/docker-entrypoint-initdb.d/
+    # database port
     ports:
       - "3307:3306"
+    # application network, each container for a service joins this network
     networks:
       - nest-demo-network
 
@@ -84,6 +106,7 @@ services:
 
 #Docker Networks
 networks:
+  # All container connect in a network
   nest-demo-network:
     driver: bridge
 # save (persist) data

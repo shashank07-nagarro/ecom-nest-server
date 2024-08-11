@@ -228,7 +228,7 @@ export class SearchService {
   }
 
   public async updateProduct(post: any, id) {
-    return await this.esService.updateByQuery({
+    let response = await this.esService.updateByQuery({
       index: this.configService.get('ELASTICSEARCH_INDEX')!,
       body: {
         script: {
@@ -246,6 +246,10 @@ export class SearchService {
         },
       },
     });
+    if (!response.updated) {
+      this.indexProduct(post);
+    }
+    return response;
   }
 
   public async remove(postId: number) {
