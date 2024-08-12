@@ -58,17 +58,9 @@ $ npm run test:e2e
 $ npm run test:cov
 ```
 
-## Support
+## Run the application in Docker Environment (Currently, this point to development environment)
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+Make sure your local machine has been installed the Docker
+Run the command `docker-compose up` to starting development the application
 
-## Stay in touch
-
-- Author - [Shashank](https://nestjs.com/)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](LICENSE).
 # promo-ecom-server
